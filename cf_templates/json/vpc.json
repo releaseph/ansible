@@ -1,16 +1,38 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "cf_templates/json/vpc.json",
 
     "Parameters": {
+        "region": {
+            "Description": "AWS region",
+            "Type": "String"
+        },
+
         "vpcCidr": {
-            "Description": "VPC CIDR Block",
+            "Description": "VPC CIDR block",
             "Type": "String"
         },
 
         "vpcEnv": {
             "Description": "VPC environment string",
             "Type": "String"
+        },
+
+        "appSubnets": {
+            "Description": "Application subnet CIDR blocks",
+            "Type": "CommaDelimitedList"
+        },
+
+        "dataSubnets": {
+            "Description": "Data subnet CIDR blocks",
+            "Type": "CommaDelimitedList"
+        },
+
+        "serviceSubnets": {
+            "Description": "Service subnet CIDR blocks",
+            "Type": "CommaDelimitedList"
         }
+
     },
 
     "Resources": {
@@ -24,6 +46,18 @@
                     { "Key": "Name", "Value": { "Fn::Join": ["-", ["vpc", { "Ref": "vpcEnv" } ] ] } }
                 ]
             }
+        },
+
+        "AppSubnetA": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": { "Fn::Join": ["", [ { "Ref": "region" }, "a" ] ] },
+                "CidrBlock": { "Fn::Select": [ "0", { "Ref": "appSubnets" } ] },
+                "VpcId": { "Ref": "VPC" },
+                "Tags": [
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "appsubnet-a" ] ] } }
+                ]
+            }
         }
     },
 
@@ -31,6 +65,11 @@
         "vpcId": {
             "Description": "Logical ID of VPC",
             "Value": { "Ref": "VPC" }
+        },
+
+        "appSubnetAId": {
+            "Description": "Logical ID of AppSubnetA",
+            "Value": { "Ref": "AppSubnetA" }
         }
     }
 }

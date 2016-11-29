@@ -11,5 +11,9 @@
         state: present
         template: "cf_templates/json/vpc.json"
         template_parameters:
+          region: "{{ region }}"
           vpcCidr: "{{ vpc_cidr }}"
           vpcEnv: "{{ vpc_env }}"
+          appSubnets: "{{ app_subnets }}"
+          dataSubnets: "{{ data_subnets }}"
+          serviceSubnets: "{{ service_subnets }}"
