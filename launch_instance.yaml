@@ -1,0 +1,13 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  vars_files:
+    - "{{ env }}/group_vars/{{ role }}"
+  tasks:
+    - name: Launch instance
+      ec2:
+        key_name: "{{ ssh_key }}"
+        image: "{{ ami }}"
+        instance_type: "{{ instance_type }}"
+        state: present

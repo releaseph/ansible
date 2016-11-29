@@ -1,0 +1,15 @@
+---
+- name: Create VPC
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Create VPC stack
+      cloudformation:
+        region: "{{ region }}"
+        stack_name: "vpc-{{ vpc_env }}"
+        state: present
+        template: "cf_templates/json/vpc.json"
+        template_parameters:
+          vpcCidr: "{{ vpc_cidr }}"
+          vpcEnv: "{{ vpc_env }}"

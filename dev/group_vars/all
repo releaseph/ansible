@@ -1,0 +1,5 @@
+env: dev
+ssh_key: releaseph
+region: ap-southeast-1
+vpc_env: devqa
+vpc_cidr: 172.17.0.0/16

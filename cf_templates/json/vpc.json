@@ -1,0 +1,36 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+
+    "Parameters": {
+        "vpcCidr": {
+            "Description": "VPC CIDR Block",
+            "Type": "String"
+        },
+
+        "vpcEnv": {
+            "Description": "VPC environment string",
+            "Type": "String"
+        }
+    },
+
+    "Resources": {
+        "VPC": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": { "Ref": "vpcCidr" },
+                "EnableDnsSupport": "true",
+                "EnableDnsHostnames": "true",
+                "Tags": [
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", ["vpc", { "Ref": "vpcEnv" } ] ] } }
+                ]
+            }
+        }
+    },
+
+    "Outputs": {
+        "vpcId": {
+            "Description": "Logical ID of VPC",
+            "Value": { "Ref": "VPC" }
+        }
+    }
+}
