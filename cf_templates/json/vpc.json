@@ -43,7 +43,7 @@
                 "EnableDnsSupport": "true",
                 "EnableDnsHostnames": "true",
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", ["vpc", { "Ref": "vpcEnv" } ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "vpc" ] ] } }
                 ]
             }
         },
@@ -58,6 +58,128 @@
                     { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "appsubnet-a" ] ] } }
                 ]
             }
+        },
+
+        "AppSubnetB": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": { "Fn::Join": ["", [ { "Ref": "region" }, "b" ] ] },
+                "CidrBlock": { "Fn::Select": [ "1", { "Ref": "appSubnets" } ] },
+                "VpcId": { "Ref": "VPC" },
+                "Tags": [
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "appsubnet-b" ] ] } }
+                ]
+            }
+        },
+
+        "DataSubnetA": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": { "Fn::Join": ["", [ { "Ref": "region" }, "a" ] ] },
+                "CidrBlock": { "Fn::Select": [ "0", { "Ref": "dataSubnets" } ] },
+                "VpcId": { "Ref": "VPC" },
+                "Tags": [
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "datasubnet-a" ] ] } }
+                ]
+            }
+        },
+
+        "DataSubnetB": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": { "Fn::Join": ["", [ { "Ref": "region" }, "b" ] ] },
+                "CidrBlock": { "Fn::Select": [ "1", { "Ref": "dataSubnets" } ] },
+                "VpcId": { "Ref": "VPC" },
+                "Tags": [
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "datasubnet-b" ] ] } }
+                ]
+            }
+        },
+
+        "ServiceSubnetA": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": { "Fn::Join": ["", [ { "Ref": "region" }, "a" ] ] },
+                "CidrBlock": { "Fn::Select": [ "0", { "Ref": "serviceSubnets" } ] },
+                "VpcId": { "Ref": "VPC" },
+                "Tags": [
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "servicesubnet-a" ] ] } }
+                ]
+            }
+        },
+
+        "ServiceSubnetB": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": { "Fn::Join": ["", [ { "Ref": "region" }, "b" ] ] },
+                "CidrBlock": { "Fn::Select": [ "1", { "Ref": "serviceSubnets" } ] },
+                "VpcId": { "Ref": "VPC" },
+                "Tags": [
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "servicesubnet-b" ] ] } }
+                ]
+            }
+        },
+
+        "InternetGateway": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {
+                "Tags": [
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "internet-gateway" ] ] } }
+                ]
+            }
+        },
+
+        "InternetGatewayAttachment": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "InternetGatewayId": { "Ref": "InternetGateway" },
+                "VpcId": { "Ref": "VPC" }
+            }
+        },
+
+        "PublicRouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": { "Ref": "VPC" },
+                "Tags": [
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "routetable-public" ] ] } }
+                ]
+            }
+        },
+
+        "PublicRoute": {
+            "Type": "AWS::EC2::Route",
+            "Properties": {
+                "RouteTableId": { "Ref": "PublicRouteTable" },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": { "Ref": "InternetGateway" }
+            }
+        },
+
+        "ServiceSubnetARouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": { "Ref": "ServiceSubnetA" },
+                "RouteTableId": { "Ref": "PublicRouteTable" }
+            }
+        },
+
+        "ServiceSubnetBRouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": { "Ref": "ServiceSubnetB" },
+                "RouteTableId": { "Ref": "PublicRouteTable" }
+            }
+        },
+
+        "PrivateRouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": { "Ref": "VPC" },
+                "Tags": [
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "routetable-private" ] ] } }
+                ]
+            }
         }
     },
 
@@ -67,9 +189,49 @@
             "Value": { "Ref": "VPC" }
         },
 
+        "internetGatewayId": {
+            "Description": "Logical ID of InternetGateway",
+            "Value": { "Ref": "InternetGateway" }
+        },
+
+        "publicRouteTableId": {
+            "Description": "Logical ID of PublicRouteTable",
+            "Value": { "Ref": "PublicRouteTable" }
+        },
+
+        "privateRouteTableId": {
+            "Description": "Logical ID of PrivateRouteTable",
+            "Value": { "Ref": "PrivateRouteTable" }
+        },
+
         "appSubnetAId": {
             "Description": "Logical ID of AppSubnetA",
             "Value": { "Ref": "AppSubnetA" }
+        },
+
+        "appSubnetBId": {
+            "Description": "Logical ID of AppSubnetB",
+            "Value": { "Ref": "AppSubnetB" }
+        },
+
+        "dataSubnetAId": {
+            "Description": "Logical ID of DataSubnetA",
+            "Value": { "Ref": "DataSubnetA" }
+        },
+
+        "dataSubnetBId": {
+            "Description": "Logical ID of DataSubnetB",
+            "Value": { "Ref": "DataSubnetB" }
+        },
+
+        "serviceSubnetAId": {
+            "Description": "Logical ID of ServiceSubnetA",
+            "Value": { "Ref": "ServiceSubnetA" }
+        },
+
+        "serviceSubnetBId": {
+            "Description": "Logical ID of ServiceSubnetB",
+            "Value": { "Ref": "ServiceSubnetB" }
         }
     }
 }
