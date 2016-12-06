@@ -130,6 +130,7 @@
         },
 
         "InternetGatewayAttachment": {
+            "DependsOn": "InternetGateway",
             "Type": "AWS::EC2::VPCGatewayAttachment",
             "Properties": {
                 "InternetGatewayId": { "Ref": "InternetGateway" },
@@ -148,6 +149,7 @@
         },
 
         "PublicRoute": {
+            "DependsOn": [ "InternetGateway", "InternetGatewayAttachment" ],
             "Type": "AWS::EC2::Route",
             "Properties": {
                 "RouteTableId": { "Ref": "PublicRouteTable" },
