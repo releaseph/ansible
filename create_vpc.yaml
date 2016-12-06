@@ -17,3 +17,4 @@
           appSubnets: "{{ app_subnets }}"
           dataSubnets: "{{ data_subnets }}"
           serviceSubnets: "{{ service_subnets }}"
+          sshKey: "{{ ssh_key }}"
