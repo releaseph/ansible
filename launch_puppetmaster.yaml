@@ -1,0 +1,25 @@
+---
+- name: Launch Puppetmaster
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  vars_files:
+    - "{{ env }}/group_vars/puppetmaster"
+  tasks:
+    - name: Get vpc info
+      cloudformation_stack_facts: stack_name=vpc-{{ vpc_env }} region={{ region }}
+      register: vpc
+    - name: Create Puppetmaster stack
+      cloudformation:
+        region: "{{ region }}"
+        stack_name: "puppetmaster-{{ vpc_env }}"
+        state: present
+        template: "cf_templates/json/puppetmaster.json"
+        template_parameters:
+          vpcCidr: "{{ vpc_cidr }}"
+          vpcEnv: "{{ vpc_env }}"
+          vpcId: "{{ vpc.stack_outputs.vpcId }}"
+          ami: "{{ ami }}"
+          instanceType: "{{ instance_type }}"
+          sshKey: "{{ ssh_key }}"
+          serviceSubnetBId: "{{ vpc.stack_outputs.serviceSubnetBId }}"

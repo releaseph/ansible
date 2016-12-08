@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "cf_templates/json/vpc.json",
+    "Description": "ansible/cf_templates/json/vpc.json",
 
     "Parameters": {
         "region": {
@@ -48,7 +48,7 @@
                 "EnableDnsSupport": "true",
                 "EnableDnsHostnames": "true",
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "vpc" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "vpc", { "Ref": "vpcEnv" } ] ] } }
                 ]
             }
         },
@@ -60,7 +60,7 @@
                 "CidrBlock": { "Fn::Select": [ "0", { "Ref": "appSubnets" } ] },
                 "VpcId": { "Ref": "Vpc" },
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "appsubnet-a" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "appsubnet", { "Ref": "vpcEnv" }, "a" ] ] } }
                 ]
             }
         },
@@ -72,7 +72,7 @@
                 "CidrBlock": { "Fn::Select": [ "1", { "Ref": "appSubnets" } ] },
                 "VpcId": { "Ref": "Vpc" },
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "appsubnet-b" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "appsubnet", { "Ref": "vpcEnv" }, "b" ] ] } }
                 ]
             }
         },
@@ -84,7 +84,7 @@
                 "CidrBlock": { "Fn::Select": [ "0", { "Ref": "dataSubnets" } ] },
                 "VpcId": { "Ref": "Vpc" },
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "datasubnet-a" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "datasubnet", { "Ref": "vpcEnv" }, "a" ] ] } }
                 ]
             }
         },
@@ -96,7 +96,7 @@
                 "CidrBlock": { "Fn::Select": [ "1", { "Ref": "dataSubnets" } ] },
                 "VpcId": { "Ref": "Vpc" },
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "datasubnet-b" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "datasubnet", { "Ref": "vpcEnv" }, "b" ] ] } }
                 ]
             }
         },
@@ -108,7 +108,7 @@
                 "CidrBlock": { "Fn::Select": [ "0", { "Ref": "serviceSubnets" } ] },
                 "VpcId": { "Ref": "Vpc" },
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "servicesubnet-a" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "servicesubnet", { "Ref": "vpcEnv" }, "a" ] ] } }
                 ]
             }
         },
@@ -120,7 +120,7 @@
                 "CidrBlock": { "Fn::Select": [ "1", { "Ref": "serviceSubnets" } ] },
                 "VpcId": { "Ref": "Vpc" },
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "servicesubnet-b" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "servicesubnet", { "Ref": "vpcEnv" }, "b" ] ] } }
                 ]
             }
         },
@@ -129,7 +129,7 @@
             "Type": "AWS::EC2::InternetGateway",
             "Properties": {
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "internet-gateway" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "internetgateway", { "Ref": "vpcEnv" } ] ] } }
                 ]
             }
         },
@@ -148,7 +148,7 @@
             "Properties": {
                 "VpcId": { "Ref": "Vpc" },
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "routetable-public" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "routetable", { "Ref": "vpcEnv" }, "public" ] ] } }
                 ]
             }
         },
@@ -171,14 +171,6 @@
             }
         },
 
-        "ServiceSubnetBRouteTableAssociation": {
-            "Type": "AWS::EC2::SubnetRouteTableAssociation",
-            "Properties": {
-                "SubnetId": { "Ref": "ServiceSubnetB" },
-                "RouteTableId": { "Ref": "PublicRouteTable" }
-            }
-        },
-
         "NatSecurityGroup": {
             "Type" : "AWS::EC2::SecurityGroup",
             "Properties": {
@@ -196,7 +188,7 @@
                     { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": { "Ref": "vpcCidr" } }
                 ],
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "nat-sg" ] ] } },
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "natsg", { "Ref": "vpcEnv" } ] ] } },
                 ]
             }
         },
@@ -211,9 +203,19 @@
                 "SourceDestCheck": "false",
                 "SubnetId": { "Ref": "ServiceSubnetA" },
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "nat" ] ] } },
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "nat", { "Ref": "vpcEnv" } ] ] } },
                     { "Key": "vpc_env", "Value": { "Ref": "vpcEnv" } }
-                ]
+                ],
+                "UserData": { "Fn::Base64": { "Fn::Join": ["", [
+                    "#!/bin/bash\n",
+                    "useradd -m releaseph\n",
+                    "cp -rp /home/ec2-user/.ssh /home/releaseph/.ssh\n",
+                    "chown -R releaseph:releaseph /home/releaseph/.ssh\n",
+                    "chmod +w /etc/sudoers.d/cloud-init\n",
+                    "sed -i -e 's/ec2-user/releaseph/g' /etc/sudoers.d/cloud-init\n",
+                    "chmod -w /etc/sudoers.d/cloud-init\n",
+                    "userdel -r ec2-user"
+                ] ] } }
             }
         },
 
@@ -231,7 +233,7 @@
             "Properties": {
                 "VpcId": { "Ref": "Vpc" },
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "vpcEnv" }, "routetable-private" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "routetable", { "Ref": "vpcEnv" }, "private" ] ] } }
                 ]
             }
         },
@@ -277,6 +279,14 @@
                 "RouteTableId": { "Ref": "PrivateRouteTable" }
             }
         },
+
+        "ServiceSubnetBRouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": { "Ref": "ServiceSubnetB" },
+                "RouteTableId": { "Ref": "PrivateRouteTable" }
+            }
+        }
     },
 
     "Outputs": {

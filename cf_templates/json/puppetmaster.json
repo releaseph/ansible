@@ -1,0 +1,94 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "ansible/cf_templates/json/puppetmaster.json",
+
+    "Parameters": {
+        "vpcId": {
+            "Description": "VPC ID",
+            "Type": "String"
+        },
+
+        "vpcCidr": {
+            "Description": "VPC CIDR block",
+            "Type": "String"
+        },
+
+        "vpcEnv": {
+            "Description": "VPC environment string",
+            "Type": "String"
+        },
+
+        "ami": {
+            "Description": "Instance AMI",
+            "Type": "String"
+        },
+
+        "instanceType": {
+            "Description": "Instance type",
+            "Type": "String"
+        },
+
+        "sshKey": {
+            "Description": "EC2 instance SSH key",
+            "Type": "String"
+        },
+
+        "serviceSubnetBId": {
+            "Description": "Logical ID of ServiceSubnetA",
+            "Type": "String"
+        }
+
+
+    },
+
+    "Resources": {
+        "PuppetmasterSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Puppetmaster security group",
+                "VpcId": { "Ref": "vpcId" },
+                "SecurityGroupIngress": [
+                    { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": { "Ref": "vpcCidr" } },
+                    { "IpProtocol": "tcp", "FromPort": "8140", "ToPort": "8140", "CidrIp": { "Ref": "vpcCidr" } }
+                ],
+                "Tags": [
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "puppetmastersg", { "Ref": "vpcEnv" } ] ] } },
+                ]
+            }
+        },
+
+        "PuppetmasterInstance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "ImageId": { "Ref": "ami" },
+                "InstanceType": { "Ref": "instanceType" },
+                "KeyName": { "Ref": "sshKey" },
+                "SecurityGroupIds": [ { "Ref": "PuppetmasterSecurityGroup" } ],
+                "SubnetId": { "Ref": "serviceSubnetBId" },
+                "Tags": [
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "puppetmaster", { "Ref": "vpcEnv" } ] ] } },
+                    { "Key": "vpc_env", "Value": { "Ref": "vpcEnv" } }
+                ],
+                "UserData": { "Fn::Base64": { "Fn::Join": ["", [
+                    "#!/bin/bash\n",
+                    "rpm -Uvh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm\n",
+                    "yum -y install puppetserver\n",
+                    "/opt/puppetlabs/puppet/bin/gem install r10k"
+                ] ] } }
+            }
+        }
+    },
+
+    "Outputs": {
+        "puppetmasterInstanceId": {
+            "Description": "Logical ID of PuppetmasterInstance",
+            "Value": { "Ref": "PuppetmasterInstance" }
+        },
+
+        "puppetmasterSecurityGroupId": {
+            "Description": "Logical ID of PuppetmasterSecurityGroup",
+            "Value": { "Ref": "PuppetmasterSecurityGroup" }
+        }
+
+    }
+}
