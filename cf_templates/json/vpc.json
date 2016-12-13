@@ -106,6 +106,7 @@
             "Properties": {
                 "AvailabilityZone": { "Fn::Join": ["", [ { "Ref": "region" }, "a" ] ] },
                 "CidrBlock": { "Fn::Select": [ "0", { "Ref": "serviceSubnets" } ] },
+                "MapPublicIpOnLaunch": "True",
                 "VpcId": { "Ref": "Vpc" },
                 "Tags": [
                     { "Key": "Name", "Value": { "Fn::Join": ["-", [ "servicesubnet", { "Ref": "vpcEnv" }, "a" ] ] } }
@@ -119,6 +120,7 @@
                 "AvailabilityZone": { "Fn::Join": ["", [ { "Ref": "region" }, "b" ] ] },
                 "CidrBlock": { "Fn::Select": [ "1", { "Ref": "serviceSubnets" } ] },
                 "VpcId": { "Ref": "Vpc" },
+                "MapPublicIpOnLaunch": "True",
                 "Tags": [
                     { "Key": "Name", "Value": { "Fn::Join": ["-", [ "servicesubnet", { "Ref": "vpcEnv" }, "b" ] ] } }
                 ]
@@ -171,6 +173,14 @@
             }
         },
 
+        "ServiceSubnetBRouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": { "Ref": "ServiceSubnetB" },
+                "RouteTableId": { "Ref": "PublicRouteTable" }
+            }
+        },
+
         "NatSecurityGroup": {
             "Type" : "AWS::EC2::SecurityGroup",
             "Properties": {
@@ -181,11 +191,6 @@
                     { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": { "Ref": "vpcCidr" } },
                     { "IpProtocol": "icmp", "FromPort": "8", "ToPort": "-1", "CidrIp": { "Ref": "vpcCidr" } },
                     { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "122.55.14.126/32" }
-                ],
-                "SecurityGroupEgress": [
-                    { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "0.0.0.0/0" },
-                    { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "0.0.0.0/0" },
-                    { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": { "Ref": "vpcCidr" } }
                 ],
                 "Tags": [
                     { "Key": "Name", "Value": { "Fn::Join": ["-", [ "natsg", { "Ref": "vpcEnv" } ] ] } },
@@ -276,14 +281,6 @@
             "Type": "AWS::EC2::SubnetRouteTableAssociation",
             "Properties": {
                 "SubnetId": { "Ref": "DataSubnetB" },
-                "RouteTableId": { "Ref": "PrivateRouteTable" }
-            }
-        },
-
-        "ServiceSubnetBRouteTableAssociation": {
-            "Type": "AWS::EC2::SubnetRouteTableAssociation",
-            "Properties": {
-                "SubnetId": { "Ref": "ServiceSubnetB" },
                 "RouteTableId": { "Ref": "PrivateRouteTable" }
             }
         }

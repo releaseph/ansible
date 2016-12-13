@@ -22,4 +22,4 @@
           ami: "{{ ami }}"
           instanceType: "{{ instance_type }}"
           sshKey: "{{ ssh_key }}"
-          serviceSubnetBId: "{{ vpc.stack_outputs.serviceSubnetBId }}"
+          serviceSubnetAId: "{{ vpc.stack_outputs.serviceSubnetAId }}"

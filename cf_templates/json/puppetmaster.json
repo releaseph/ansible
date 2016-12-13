@@ -33,7 +33,7 @@
             "Type": "String"
         },
 
-        "serviceSubnetBId": {
+        "serviceSubnetAId": {
             "Description": "Logical ID of ServiceSubnetA",
             "Type": "String"
         }
@@ -48,7 +48,7 @@
                 "GroupDescription": "Puppetmaster security group",
                 "VpcId": { "Ref": "vpcId" },
                 "SecurityGroupIngress": [
-                    { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": { "Ref": "vpcCidr" } },
+                    { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "122.55.14.126/32" },
                     { "IpProtocol": "tcp", "FromPort": "8140", "ToPort": "8140", "CidrIp": { "Ref": "vpcCidr" } }
                 ],
                 "Tags": [
@@ -64,7 +64,7 @@
                 "InstanceType": { "Ref": "instanceType" },
                 "KeyName": { "Ref": "sshKey" },
                 "SecurityGroupIds": [ { "Ref": "PuppetmasterSecurityGroup" } ],
-                "SubnetId": { "Ref": "serviceSubnetBId" },
+                "SubnetId": { "Ref": "serviceSubnetAId" },
                 "Tags": [
                     { "Key": "Name", "Value": { "Fn::Join": ["-", [ "puppetmaster", { "Ref": "vpcEnv" } ] ] } },
                     { "Key": "vpc_env", "Value": { "Ref": "vpcEnv" } }
@@ -72,7 +72,7 @@
                 "UserData": { "Fn::Base64": { "Fn::Join": ["", [
                     "#!/bin/bash\n",
                     "rpm -Uvh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm\n",
-                    "yum -y install puppetserver\n",
+                    "yum -y install puppetserver git\n",
                     "/opt/puppetlabs/puppet/bin/gem install r10k"
                 ] ] } }
             }
