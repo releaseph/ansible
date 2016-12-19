@@ -91,7 +91,11 @@
         "puppetmasterSecurityGroupId": {
             "Description": "Logical ID of PuppetmasterSecurityGroup",
             "Value": { "Ref": "PuppetmasterSecurityGroup" }
-        }
+        },
 
+        "puppetmasterPrivateDnsName": {
+            "Description": "Private DNS Name of PuppetmasterInstance",
+            "Value": { "Fn::GetAtt" : [ "PuppetmasterInstance", "PrivateDnsName" ] },
+        }
     }
 }
