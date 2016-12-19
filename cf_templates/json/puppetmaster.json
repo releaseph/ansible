@@ -65,6 +65,9 @@
                 "KeyName": { "Ref": "sshKey" },
                 "SecurityGroupIds": [ { "Ref": "PuppetmasterSecurityGroup" } ],
                 "SubnetId": { "Ref": "serviceSubnetAId" },
+                "BlockDeviceMappings": [
+                    { "DeviceName": "/dev/sda1", "Ebs": { "DeleteOnTermination": "True" } }
+                ],
                 "Tags": [
                     { "Key": "Name", "Value": { "Fn::Join": ["-", [ "puppetmaster", { "Ref": "vpcEnv" } ] ] } },
                     { "Key": "vpc_env", "Value": { "Ref": "vpcEnv" } }
