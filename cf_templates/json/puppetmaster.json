@@ -36,6 +36,11 @@
         "serviceSubnetAId": {
             "Description": "Logical ID of ServiceSubnetA",
             "Type": "String"
+        },
+
+        "puppetEnv": {
+            "Description": "Puppet environment",
+            "Type": "String"
         }
 
 
@@ -75,8 +80,23 @@
                 "UserData": { "Fn::Base64": { "Fn::Join": ["", [
                     "#!/bin/bash\n",
                     "rpm -Uvh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm\n",
-                    "yum -y install puppetserver git\n",
-                    "/opt/puppetlabs/puppet/bin/gem install r10k"
+                    "yum -y install puppetserver\n",
+                    "/opt/puppetlabs/puppet/bin/gem install r10k\n",
+                    "mkdir -p /etc/puppetlabs/r10k\n",
+                    "cat > /etc/puppetlabs/r10k/r10k.yaml << EOL\n",
+                    "# The location to use for storing cached Git repos\n",
+                    ":cachedir: '/var/cache/r10k'\n",
+                    "\n",
+                    "# A list of git repositories to create\n",
+                    ":sources:\n",
+                    "  # This will clone the git repository and instantiate an environment per\n",
+                    "  # branch in /etc/puppetlabs/code/environments\n",
+                    "  :puppet:\n",
+                    "    remote: 'git@github.com:pscadiz/puppet-stuff.git'\n",
+                    "    basedir: '/etc/puppetlabs/code/environments'\n",
+                    "EOL\n",
+                    "/opt/puppetlabs/puppet/bin/r10k deploy environment\n",
+                    "/opt/puppetlabs/bin/puppet config set --section agent environment ", { "Ref": "puppetEnv" }
                 ] ] } }
             }
         }
