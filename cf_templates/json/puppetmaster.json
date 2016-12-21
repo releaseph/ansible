@@ -96,7 +96,11 @@
                     "    basedir: '/etc/puppetlabs/code/environments'\n",
                     "EOL\n",
                     "/opt/puppetlabs/puppet/bin/r10k deploy environment\n",
-                    "/opt/puppetlabs/bin/puppet config set --section agent environment ", { "Ref": "puppetEnv" }
+                    "/opt/puppetlabs/bin/puppet config set --section agent environment ", { "Ref": "puppetEnv" }, "\n",
+                    "echo \"127.0.0.1 puppet\" >> /etc/hosts\n",
+                    "sed -i -e 's/\\(-Xm[sx]\\)\\([0-9a-z]*\\)/\\1512m/g' /etc/sysconfig/puppetserver\n",
+                    "systemctl start puppetserver\n",
+                    "/opt/puppetlabs/bin/puppet agent -t"
                 ] ] } }
             }
         }
