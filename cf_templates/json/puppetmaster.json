@@ -47,6 +47,43 @@
     },
 
     "Resources": {
+        "PuppetmasterIamRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version" : "2012-10-17",
+                    "Statement": [ {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": [ "ec2.amazonaws.com" ]
+                        },
+                        "Action": [ "sts:AssumeRole" ]
+                    } ]
+                },
+                "Policies": [ {
+                    "PolicyName": "puppetmasterPolicy",
+                    "PolicyDocument": {
+                        "Version" : "2012-10-17",
+                        "Statement": [ {
+                            "Effect": "Allow",
+                            "Action": [
+                                "ec2:Describe*"
+                            ],
+                            "Resource": "*"
+                        } ]
+                    }
+                } ]
+            }
+        },
+
+        "PuppetmasterInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Path": "/",
+                "Roles": [ { "Ref": "PuppetmasterIamRole" } ]
+            }
+        },
+
         "PuppetmasterSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
@@ -65,6 +102,7 @@
         "PuppetmasterInstance": {
             "Type": "AWS::EC2::Instance",
             "Properties": {
+                "IamInstanceProfile": { "Ref": "PuppetmasterInstanceProfile" },
                 "ImageId": { "Ref": "ami" },
                 "InstanceType": { "Ref": "instanceType" },
                 "KeyName": { "Ref": "sshKey" },
@@ -119,7 +157,12 @@
 
         "puppetmasterPrivateDnsName": {
             "Description": "Private DNS Name of PuppetmasterInstance",
-            "Value": { "Fn::GetAtt" : [ "PuppetmasterInstance", "PrivateDnsName" ] },
+            "Value": { "Fn::GetAtt" : [ "PuppetmasterInstance", "PrivateDnsName" ] }
+        },
+
+        "puppetmasterIamRoleArn": {
+            "Description": "ARN of PuppetmasterIamRole",
+            "Value": { "Fn::GetAtt" : [ "PuppetmasterIamRole", "Arn" ] }
         }
     }
 }
