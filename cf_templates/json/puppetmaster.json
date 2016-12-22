@@ -41,6 +41,11 @@
         "puppetEnv": {
             "Description": "Puppet environment",
             "Type": "String"
+        },
+
+        "puppetRole": {
+            "Description": "Puppet role",
+            "Type": "String"
         }
 
 
@@ -113,7 +118,8 @@
                 ],
                 "Tags": [
                     { "Key": "Name", "Value": { "Fn::Join": ["-", [ "puppetmaster", { "Ref": "vpcEnv" } ] ] } },
-                    { "Key": "vpc_env", "Value": { "Ref": "vpcEnv" } }
+                    { "Key": "vpc_env", "Value": { "Ref": "vpcEnv" } },
+                    { "Key": "puppet_role", "Value": { "Ref": "puppetRole" } }
                 ],
                 "UserData": { "Fn::Base64": { "Fn::Join": ["", [
                     "#!/bin/bash\n",
@@ -134,6 +140,7 @@
                     "    basedir: '/etc/puppetlabs/code/environments'\n",
                     "EOL\n",
                     "/opt/puppetlabs/puppet/bin/r10k deploy environment\n",
+                    "/opt/puppetlabs/bin/puppet config set --section master hiera_config '/etc/puppetlabs/code/environments/", { "Ref": "puppetEnv" }, "/hiera.yaml'\n",
                     "/opt/puppetlabs/bin/puppet config set --section agent environment ", { "Ref": "puppetEnv" }, "\n",
                     "echo \"127.0.0.1 puppet\" >> /etc/hosts\n",
                     "sed -i -e 's/\\(-Xm[sx]\\)\\([0-9a-z]*\\)/\\1512m/g' /etc/sysconfig/puppetserver\n",

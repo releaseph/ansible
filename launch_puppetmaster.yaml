@@ -24,3 +24,4 @@
           sshKey: "{{ ssh_key }}"
           serviceSubnetAId: "{{ vpc.stack_outputs.serviceSubnetAId }}"
           puppetEnv: "{{ env }}"
+          puppetRole: "{{ puppet_role }}"
