@@ -96,7 +96,8 @@
                 "VpcId": { "Ref": "vpcId" },
                 "SecurityGroupIngress": [
                     { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "122.55.14.126/32" },
-                    { "IpProtocol": "tcp", "FromPort": "8140", "ToPort": "8140", "CidrIp": { "Ref": "vpcCidr" } }
+                    { "IpProtocol": "tcp", "FromPort": "8140", "ToPort": "8140", "CidrIp": { "Ref": "vpcCidr" } },
+                    { "IpProtocol": "tcp", "FromPort": "8088", "ToPort": "8088", "CidrIp": "0.0.0.0/0" }
                 ],
                 "Tags": [
                     { "Key": "Name", "Value": { "Fn::Join": ["-", [ "puppetmastersg", { "Ref": "vpcEnv" } ] ] } },
