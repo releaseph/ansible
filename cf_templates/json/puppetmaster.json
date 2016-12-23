@@ -137,7 +137,7 @@
                     "  # This will clone the git repository and instantiate an environment per\n",
                     "  # branch in /etc/puppetlabs/code/environments\n",
                     "  :puppet:\n",
-                    "    remote: 'git@github.com:pscadiz/puppet-stuff.git'\n",
+                    "    remote: 'git@github.com:releaseph/puppet-hiera.git'\n",
                     "    basedir: '/etc/puppetlabs/code/environments'\n",
                     "EOL\n",
                     "/opt/puppetlabs/puppet/bin/r10k deploy environment\n",
