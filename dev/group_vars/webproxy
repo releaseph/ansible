@@ -1,0 +1,3 @@
+ami: ami-93aa04f0
+instance_type: t2.micro
+puppet_role: webproxy

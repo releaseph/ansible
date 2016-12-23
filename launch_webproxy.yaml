@@ -1,0 +1,30 @@
+---
+- name: Launch Web Proxy
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  vars_files:
+    - "{{ env }}/group_vars/webproxy"
+  tasks:
+    - name: Get vpc info
+      cloudformation_stack_facts: stack_name=vpc-{{ vpc_env }} region={{ region }}
+      register: vpc
+    - name: Get puppetmaster info
+      cloudformation_stack_facts: stack_name=puppetmaster-{{ vpc_env }} region={{ region }}
+      register: puppetmaster
+    - name: Create Web Proxy stack
+      cloudformation:
+        region: "{{ region }}"
+        stack_name: "webproxy-{{ vpc_env }}"
+        state: present
+        template: "cf_templates/json/webproxy.json"
+        template_parameters:
+          vpcEnv: "{{ vpc_env }}"
+          vpcId: "{{ vpc.stack_outputs.vpcId }}"
+          ami: "{{ ami }}"
+          instanceType: "{{ instance_type }}"
+          sshKey: "{{ ssh_key }}"
+          serviceSubnetAId: "{{ vpc.stack_outputs.serviceSubnetAId }}"
+          puppetEnv: "{{ env }}"
+          puppetRole: "{{ puppet_role }}"
+          puppetmasterPrivateDnsName: "{{ puppetmaster.stack_outputs.puppetmasterPrivateDnsName }}"
