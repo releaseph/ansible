@@ -1,15 +1,10 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "ansible/cf_templates/json/puppetmaster.json",
+    "Description": "ansible/cf_templates/json/webserver_rds.json",
 
     "Parameters": {
         "vpcId": {
             "Description": "VPC ID",
-            "Type": "String"
-        },
-
-        "vpcCidr": {
-            "Description": "VPC CIDR block",
             "Type": "String"
         },
 
@@ -46,13 +41,18 @@
         "puppetRole": {
             "Description": "Puppet role",
             "Type": "String"
+        },
+
+        "puppetmasterPrivateDnsName": {
+            "Description": "Internal DNS name of Puppetmaster",
+            "Type": "String"
         }
 
 
     },
 
     "Resources": {
-        "PuppetmasterIamRole": {
+        "WebserverIamRole": {
             "Type": "AWS::IAM::Role",
             "Properties": {
                 "AssumeRolePolicyDocument": {
@@ -66,7 +66,7 @@
                     } ]
                 },
                 "Policies": [ {
-                    "PolicyName": "puppetmasterPolicy",
+                    "PolicyName": "webserverPolicy",
                     "PolicyDocument": {
                         "Version" : "2012-10-17",
                         "Statement": [ {
@@ -81,72 +81,53 @@
             }
         },
 
-        "PuppetmasterInstanceProfile": {
+        "WebserverInstanceProfile": {
             "Type": "AWS::IAM::InstanceProfile",
             "Properties": {
                 "Path": "/",
-                "Roles": [ { "Ref": "PuppetmasterIamRole" } ]
+                "Roles": [ { "Ref": "WebserverIamRole" } ]
             }
         },
 
-        "PuppetmasterSecurityGroup": {
+        "WebserverSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
-                "GroupDescription": "Puppetmaster security group",
+                "GroupDescription": "Web server security group",
                 "VpcId": { "Ref": "vpcId" },
                 "SecurityGroupIngress": [
                     { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "122.55.14.126/32" },
-                    { "IpProtocol": "tcp", "FromPort": "8140", "ToPort": "8140", "CidrIp": { "Ref": "vpcCidr" } },
-                    { "IpProtocol": "tcp", "FromPort": "8088", "ToPort": "8088", "CidrIp": "0.0.0.0/0" }
+                    { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "122.55.14.126/32" }
                 ],
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "puppetmastersg", { "Ref": "vpcEnv" } ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "puppetRole" }, { "Ref": "vpcEnv" } ] ] } }
                 ]
             }
         },
 
-        "PuppetmasterInstance": {
+        "WebserverInstance": {
             "Type": "AWS::EC2::Instance",
             "Properties": {
-                "IamInstanceProfile": { "Ref": "PuppetmasterInstanceProfile" },
+                "IamInstanceProfile": { "Ref": "WebserverInstanceProfile" },
                 "ImageId": { "Ref": "ami" },
                 "InstanceType": { "Ref": "instanceType" },
                 "KeyName": { "Ref": "sshKey" },
-                "SecurityGroupIds": [ { "Ref": "PuppetmasterSecurityGroup" } ],
+                "SecurityGroupIds": [ { "Ref": "WebserverSecurityGroup" } ],
                 "SubnetId": { "Ref": "serviceSubnetAId" },
                 "BlockDeviceMappings": [
                     { "DeviceName": "/dev/sda1", "Ebs": { "DeleteOnTermination": "True" } }
                 ],
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "puppetmaster", { "Ref": "vpcEnv" } ] ] } },
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "puppetRole" }, { "Ref": "vpcEnv" } ] ] } },
                     { "Key": "vpc_env", "Value": { "Ref": "vpcEnv" } },
-                    { "Key": "puppet_role", "Value": { "Ref": "puppetRole" } }
+                    { "Key": "puppet_role", "Value": { "Ref": "puppetRole" } },
+                    { "Key": "puppet_env", "Value": { "Ref": "puppetEnv" } }
                 ],
                 "UserData": { "Fn::Base64": { "Fn::Join": ["", [
                     "#!/bin/bash\n",
                     "rpm -Uvh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm\n",
-                    "yum -y install puppetserver\n",
-                    "/opt/puppetlabs/puppet/bin/gem install r10k\n",
-                    "mkdir -p /etc/puppetlabs/r10k\n",
-                    "cat > /etc/puppetlabs/r10k/r10k.yaml << EOL\n",
-                    "# The location to use for storing cached Git repos\n",
-                    ":cachedir: '/var/cache/r10k'\n",
-                    "\n",
-                    "# A list of git repositories to create\n",
-                    ":sources:\n",
-                    "  # This will clone the git repository and instantiate an environment per\n",
-                    "  # branch in /etc/puppetlabs/code/environments\n",
-                    "  :puppet:\n",
-                    "    remote: 'git@github.com:releaseph/puppet-hiera.git'\n",
-                    "    basedir: '/etc/puppetlabs/code/environments'\n",
-                    "EOL\n",
-                    "/opt/puppetlabs/puppet/bin/r10k deploy environment\n",
-                    "/opt/puppetlabs/bin/puppet config set --section master hiera_config '/etc/puppetlabs/code/environments/", { "Ref": "puppetEnv" }, "/hiera.yaml'\n",
-                    "/opt/puppetlabs/bin/puppet config set --section master autosign true\n",
+                    "yum -y install puppet\n",
                     "/opt/puppetlabs/bin/puppet config set --section agent environment ", { "Ref": "puppetEnv" }, "\n",
-                    "echo \"127.0.0.1 puppet\" >> /etc/hosts\n",
-                    "sed -i -e 's/\\(-Xm[sx]\\)\\([0-9a-z]*\\)/\\1512m/g' /etc/sysconfig/puppetserver\n",
-                    "systemctl start puppetserver\n",
+                    "/opt/puppetlabs/bin/puppet config set --section agent server ", { "Ref": "puppetmasterPrivateDnsName" }, "\n",
                     "/opt/puppetlabs/bin/puppet agent -t"
                 ] ] } }
             }
@@ -154,24 +135,19 @@
     },
 
     "Outputs": {
-        "puppetmasterInstanceId": {
-            "Description": "Logical ID of PuppetmasterInstance",
-            "Value": { "Ref": "PuppetmasterInstance" }
+        "webserverInstanceId": {
+            "Description": "Logical ID of WebserverInstance",
+            "Value": { "Ref": "WebserverInstance" }
         },
 
-        "puppetmasterSecurityGroupId": {
-            "Description": "Logical ID of PuppetmasterSecurityGroup",
-            "Value": { "Ref": "PuppetmasterSecurityGroup" }
+        "webserverSecurityGroupId": {
+            "Description": "Logical ID of WebserverSecurityGroup",
+            "Value": { "Ref": "WebserverSecurityGroup" }
         },
 
-        "puppetmasterPrivateDnsName": {
-            "Description": "Private DNS Name of PuppetmasterInstance",
-            "Value": { "Fn::GetAtt" : [ "PuppetmasterInstance", "PrivateDnsName" ] }
-        },
-
-        "puppetmasterIamRoleArn": {
-            "Description": "ARN of PuppetmasterIamRole",
-            "Value": { "Fn::GetAtt" : [ "PuppetmasterIamRole", "Arn" ] }
+        "webserverIamRoleArn": {
+            "Description": "ARN of WebserverIamRole",
+            "Value": { "Fn::GetAtt" : [ "WebserverIamRole", "Arn" ] }
         }
     }
 }

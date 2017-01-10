@@ -99,7 +99,7 @@
                     { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "122.55.14.126/32" }
                 ],
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "webproxysg", { "Ref": "vpcEnv" } ] ] } },
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "webproxysg", { "Ref": "vpcEnv" } ] ] } }
                 ]
             }
         },
