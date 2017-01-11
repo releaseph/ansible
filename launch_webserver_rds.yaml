@@ -12,10 +12,10 @@
     - name: Get puppetmaster info
       cloudformation_stack_facts: stack_name=puppetmaster-{{ vpc_env }} region={{ region }}
       register: puppetmaster
-    - name: Create Web Proxy stack
+    - name: Create Web Server stack
       cloudformation:
         region: "{{ region }}"
-        stack_name: "{{ puppet_role }}-{{ vpc_env }}"
+        stack_name: "{{ puppet_role }}-{{ env }}"
         state: present
         template: "cf_templates/json/webserver_rds.json"
         template_parameters:
