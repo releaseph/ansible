@@ -127,7 +127,7 @@
                     { "DeviceName": "/dev/sda1", "Ebs": { "DeleteOnTermination": "True" } }
                 ],
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "serviceName" }, { "Ref": "vpcEnv" } ] ] } },
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "serviceName" }, { "Ref": "puppetEnv" } ] ] } },
                     { "Key": "Business", "Value": { "Ref": "businessName" } },
                     { "Key": "vpc_env", "Value": { "Ref": "vpcEnv" } },
                     { "Key": "puppet_role", "Value": { "Ref": "puppetRole" } },
