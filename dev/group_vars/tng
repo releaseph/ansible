@@ -1,0 +1,5 @@
+service_name: tng
+business_name: Education
+ami: ami-93aa04f0
+instance_type: t2.micro
+puppet_role: tng

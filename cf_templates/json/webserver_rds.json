@@ -3,6 +3,16 @@
     "Description": "ansible/cf_templates/json/webserver_rds.json",
 
     "Parameters": {
+        "serviceName": {
+            "Description": "Service name",
+            "Type": "String"
+        },
+
+        "businessName": {
+            "Description": "Name of business the resource belongs to",
+            "Type": "String"
+        },
+
         "vpcId": {
             "Description": "VPC ID",
             "Type": "String"
@@ -99,7 +109,7 @@
                     { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "122.55.14.126/32" }
                 ],
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "puppetRole" }, { "Ref": "vpcEnv" } ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "serviceName" }, { "Ref": "vpcEnv" } ] ] } }
                 ]
             }
         },
@@ -117,7 +127,8 @@
                     { "DeviceName": "/dev/sda1", "Ebs": { "DeleteOnTermination": "True" } }
                 ],
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "puppetRole" }, { "Ref": "vpcEnv" } ] ] } },
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "serviceName" }, { "Ref": "vpcEnv" } ] ] } },
+                    { "Key": "Business", "Value": { "Ref": "businessName" } },
                     { "Key": "vpc_env", "Value": { "Ref": "vpcEnv" } },
                     { "Key": "puppet_role", "Value": { "Ref": "puppetRole" } },
                     { "Key": "puppet_env", "Value": { "Ref": "puppetEnv" } }

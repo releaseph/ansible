@@ -15,10 +15,12 @@
     - name: Create Web Server stack
       cloudformation:
         region: "{{ region }}"
-        stack_name: "{{ puppet_role }}-{{ env }}"
+        stack_name: "{{ service_name }}-{{ env }}"
         state: present
         template: "cf_templates/json/webserver_rds.json"
         template_parameters:
+          serviceName: "{{ service_name }}"
+          businessName: "{{ business_name }}"
           vpcEnv: "{{ vpc_env }}"
           vpcId: "{{ vpc.stack_outputs.vpcId }}"
           ami: "{{ ami }}"
