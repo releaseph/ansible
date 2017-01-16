@@ -9,7 +9,7 @@
         region: "{{ region }}"
         stack_name: "vpc-{{ vpc_env }}"
         state: present
-        template: "cf_templates/json/vpc.json"
+        template: "../cf_templates/json/vpc.json"
         template_parameters:
           region: "{{ region }}"
           vpcCidr: "{{ vpc_cidr }}"

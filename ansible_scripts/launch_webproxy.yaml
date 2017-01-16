@@ -4,7 +4,7 @@
   connection: local
   gather_facts: no
   vars_files:
-    - "{{ env }}/group_vars/{{ role }}"
+    - "../{{ env }}/group_vars/webproxy"
   tasks:
     - name: Get vpc info
       cloudformation_stack_facts: stack_name=vpc-{{ vpc_env }} region={{ region }}
@@ -12,15 +12,13 @@
     - name: Get puppetmaster info
       cloudformation_stack_facts: stack_name=puppetmaster-{{ vpc_env }} region={{ region }}
       register: puppetmaster
-    - name: Create Web Server stack
+    - name: Create Web Proxy stack
       cloudformation:
         region: "{{ region }}"
-        stack_name: "{{ service_name }}-{{ env }}"
+        stack_name: "webproxy-{{ vpc_env }}"
         state: present
-        template: "cf_templates/json/webserver_rds.json"
+        template: "../cf_templates/json/webproxy.json"
         template_parameters:
-          serviceName: "{{ service_name }}"
-          businessName: "{{ business_name }}"
           vpcEnv: "{{ vpc_env }}"
           vpcId: "{{ vpc.stack_outputs.vpcId }}"
           ami: "{{ ami }}"
