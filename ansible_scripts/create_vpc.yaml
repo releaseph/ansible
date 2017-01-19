@@ -4,6 +4,9 @@
   connection: local
   gather_facts: no
   tasks:
+    - name: Get hosted zone info
+      cloudformation_stack_facts: stack_name=hostedzone region={{ region }}
+      register: hostedzone
     - name: Create VPC stack
       cloudformation:
         region: "{{ region }}"
@@ -18,3 +21,4 @@
           dataSubnets: "{{ data_subnets }}"
           serviceSubnets: "{{ service_subnets }}"
           sshKey: "{{ ssh_key }}"
+          hostedZoneName: "{{ hostedzone.stack_outputs.hostedZoneName }}"

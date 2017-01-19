@@ -8,6 +8,36 @@
             "Type": "String"
         },
 
+        "hostedZoneId": {
+            "Description": "Hosted zone ID",
+            "Type": "String"
+        },
+
+        "hostedZoneName": {
+            "Description": "Hosted zone name",
+            "Type": "String"
+        },
+
+        "devHostedZoneId": {
+            "Description": "Hosted zone ID for dev environment",
+            "Type": "String"
+        },
+
+        "devHostedZoneName": {
+            "Description": "Hosted zone name for dev environment",
+            "Type": "String"
+        },
+
+        "qaHostedZoneId": {
+            "Description": "Hosted zone ID for qa environment",
+            "Type": "String"
+        },
+
+        "qaHostedZoneName": {
+            "Description": "Hosted zone name for qa environment",
+            "Type": "String"
+        },
+
         "vpcCidr": {
             "Description": "VPC CIDR block",
             "Type": "String"
@@ -150,7 +180,41 @@
                     "/opt/puppetlabs/bin/puppet agent -t"
                 ] ] } }
             }
+        },
+
+        "PuppetmasterPublicRecordSet": {
+            "Type" : "AWS::Route53::RecordSet",
+            "Properties": {
+                "HostedZoneId": { "Ref": "hostedZoneId" },
+                "Name": { "Fn::Join": [".", [ "puppetmaster", { "Ref": "hostedZoneName" } ] ] },
+                "ResourceRecords": [ { "Fn::GetAtt" : [ "PuppetmasterInstance", "PublicIp" ] } ],
+                "TTL": "300",
+                "Type": "A"
+            }
+        },
+
+        "PuppetmasterDevRecordSet": {
+            "Type" : "AWS::Route53::RecordSet",
+            "Properties": {
+                "HostedZoneId": { "Ref": "devHostedZoneId" },
+                "Name": { "Fn::Join": [".", [ "puppetmaster", { "Ref": "devHostedZoneName" } ] ] },
+                "ResourceRecords": [ { "Fn::GetAtt" : [ "PuppetmasterInstance", "PrivateIp" ] } ],
+                "TTL": "300",
+                "Type": "A"
+            }
+        },
+
+        "PuppetmasterQaRecordSet": {
+            "Type" : "AWS::Route53::RecordSet",
+            "Properties": {
+                "HostedZoneId": { "Ref": "qaHostedZoneId" },
+                "Name": { "Fn::Join": [".", [ "puppetmaster", { "Ref": "qaHostedZoneName" } ] ] },
+                "ResourceRecords": [ { "Fn::GetAtt" : [ "PuppetmasterInstance", "PrivateIp" ] } ],
+                "TTL": "300",
+                "Type": "A"
+            }
         }
+
     },
 
     "Outputs": {
@@ -164,9 +228,9 @@
             "Value": { "Ref": "PuppetmasterSecurityGroup" }
         },
 
-        "puppetmasterPrivateDnsName": {
-            "Description": "Private DNS Name of PuppetmasterInstance",
-            "Value": { "Fn::GetAtt" : [ "PuppetmasterInstance", "PrivateDnsName" ] }
+        "puppetmasterPublicDnsName": {
+            "Description": "DNS Name of PuppetmasterPublicRecordSet",
+            "Value": { "Ref": "PuppetmasterPublicRecordSet" }
         },
 
         "puppetmasterIamRoleArn": {

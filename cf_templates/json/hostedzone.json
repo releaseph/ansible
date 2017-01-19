@@ -1,0 +1,36 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "ansible/cf_templates/json/hostedzone.json",
+
+    "Parameters": {
+        "hostedZoneName": {
+            "Description": "Hosted zone name",
+            "Type": "String",
+            "Default": "buildandrelease.org"
+        }
+    },
+
+    "Resources": {
+        "HostedZone": {
+            "Type" : "AWS::Route53::HostedZone",
+            "Properties" : {
+                "Name": { "Ref": "hostedZoneName" }
+            }
+        }
+
+    },
+
+    "Outputs": {
+        "hostedZoneId": {
+            "Description": "Logical ID of HostedZone",
+            "Value": { "Ref": "HostedZone" }
+        },
+
+        "hostedZoneName": {
+            "Description": "Hosted zone name",
+            "Value": { "Ref": "hostedZoneName" }
+        }
+
+    }
+
+}

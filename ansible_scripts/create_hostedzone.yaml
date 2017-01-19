@@ -1,0 +1,12 @@
+---
+- name: Create Hosted Zone
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Create hosted zone
+      cloudformation:
+        region: "{{ region }}"
+        stack_name: "hostedzone"
+        state: present
+        template: "../cf_templates/json/hostedzone.json"

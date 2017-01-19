@@ -8,6 +8,11 @@
             "Type": "String"
         },
 
+        "hostedZoneName": {
+            "Description": "Hosted zone name",
+            "Type": "String"
+        },
+
         "vpcCidr": {
             "Description": "VPC CIDR block",
             "Type": "String"
@@ -50,6 +55,22 @@
                 "Tags": [
                     { "Key": "Name", "Value": { "Fn::Join": ["-", [ "vpc", { "Ref": "vpcEnv" } ] ] } }
                 ]
+            }
+        },
+
+        "DevHostedZone": {
+            "Type" : "AWS::Route53::HostedZone",
+            "Properties" : {
+                "Name": { "Fn::Join": [".", [ "dev", { "Ref": "hostedZoneName" } ] ] },
+                "VPCs": [ { "VPCId": { "Ref": "Vpc" }, "VPCRegion": { "Ref": "region" } } ]
+            }
+        },
+
+        "QaHostedZone": {
+            "Type" : "AWS::Route53::HostedZone",
+            "Properties" : {
+                "Name": { "Fn::Join": [".", [ "qa", { "Ref": "hostedZoneName" } ] ] },
+                "VPCs": [ { "VPCId": { "Ref": "Vpc" }, "VPCRegion": { "Ref": "region" } } ]
             }
         },
 
@@ -290,6 +311,26 @@
         "vpcId": {
             "Description": "Logical ID of Vpc",
             "Value": { "Ref": "Vpc" }
+        },
+
+        "devHostedZoneId": {
+            "Description": "Logical ID of DevHostedZone",
+            "Value": { "Ref": "DevHostedZone" }
+        },
+
+        "devHostedZoneName": {
+            "Description": "Dev hosted zone name",
+            "Value": { "Fn::Join": [".", [ "dev", { "Ref": "hostedZoneName" } ] ] }
+        },
+
+        "qaHostedZoneId": {
+            "Description": "Logical ID of QaHostedZone",
+            "Value": { "Ref": "QaHostedZone" }
+        },
+
+        "qaHostedZoneName": {
+            "Description": "Qa hosted zone name",
+            "Value": { "Fn::Join": [".", [ "qa", { "Ref": "hostedZoneName" } ] ] }
         },
 
         "internetGatewayId": {
