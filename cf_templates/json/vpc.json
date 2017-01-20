@@ -41,8 +41,25 @@
         "sshKey": {
             "Description": "EC2 instance SSH key",
             "Type": "String"
+        },
+
+        "business": {
+            "Description": "Business owner of resource",
+            "Type": "String"
+        },
+
+        "mgmtVpcId": {
+            "Description": "Logical ID of Management VPC",
+            "Type": "String"
         }
 
+    },
+
+    "Conditions": {
+        "MgmtVpc": { "Fn::Equals": [ { "Ref": "vpcEnv" }, "mgmt" ] },
+        "DevQaVpc": { "Fn::Equals": [ { "Ref": "vpcEnv" }, "devqa" ] },
+        "UatProdVpc": { "Fn::Equals": [ { "Ref": "vpcEnv" }, "uatprod" ] },
+        "CreateMgmtPeering": { "Fn::Or": [ { "Condition": "DevQaVpc" }, { "Condition": "UatProdVpc" } ] }
     },
 
     "Resources": {
@@ -53,12 +70,23 @@
                 "EnableDnsSupport": "true",
                 "EnableDnsHostnames": "true",
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "vpc", { "Ref": "vpcEnv" } ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "vpc", { "Ref": "vpcEnv" } ] ] } },
+                    { "Key": "Business", "Value": { "Ref": "business" } }
                 ]
             }
         },
 
+        "MgmtHostedZone": {
+            "Condition": "MgmtVpc",
+            "Type" : "AWS::Route53::HostedZone",
+            "Properties" : {
+                "Name": { "Fn::Join": [".", [ "mgmt", { "Ref": "hostedZoneName" } ] ] },
+                "VPCs": [ { "VPCId": { "Ref": "Vpc" }, "VPCRegion": { "Ref": "region" } } ]
+            }
+        },
+
         "DevHostedZone": {
+            "Condition": "DevQaVpc",
             "Type" : "AWS::Route53::HostedZone",
             "Properties" : {
                 "Name": { "Fn::Join": [".", [ "dev", { "Ref": "hostedZoneName" } ] ] },
@@ -67,6 +95,7 @@
         },
 
         "QaHostedZone": {
+            "Condition": "DevQaVpc",
             "Type" : "AWS::Route53::HostedZone",
             "Properties" : {
                 "Name": { "Fn::Join": [".", [ "qa", { "Ref": "hostedZoneName" } ] ] },
@@ -81,7 +110,8 @@
                 "CidrBlock": { "Fn::Select": [ "0", { "Ref": "appSubnets" } ] },
                 "VpcId": { "Ref": "Vpc" },
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "appsubnet", { "Ref": "vpcEnv" }, "a" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "appsubnet", { "Ref": "vpcEnv" }, "a" ] ] } },
+                    { "Key": "Business", "Value": { "Ref": "business" } }
                 ]
             }
         },
@@ -93,7 +123,8 @@
                 "CidrBlock": { "Fn::Select": [ "1", { "Ref": "appSubnets" } ] },
                 "VpcId": { "Ref": "Vpc" },
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "appsubnet", { "Ref": "vpcEnv" }, "b" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "appsubnet", { "Ref": "vpcEnv" }, "b" ] ] } },
+                    { "Key": "Business", "Value": { "Ref": "business" } }
                 ]
             }
         },
@@ -105,7 +136,8 @@
                 "CidrBlock": { "Fn::Select": [ "0", { "Ref": "dataSubnets" } ] },
                 "VpcId": { "Ref": "Vpc" },
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "datasubnet", { "Ref": "vpcEnv" }, "a" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "datasubnet", { "Ref": "vpcEnv" }, "a" ] ] } },
+                    { "Key": "Business", "Value": { "Ref": "business" } }
                 ]
             }
         },
@@ -117,7 +149,8 @@
                 "CidrBlock": { "Fn::Select": [ "1", { "Ref": "dataSubnets" } ] },
                 "VpcId": { "Ref": "Vpc" },
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "datasubnet", { "Ref": "vpcEnv" }, "b" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "datasubnet", { "Ref": "vpcEnv" }, "b" ] ] } },
+                    { "Key": "Business", "Value": { "Ref": "business" } }
                 ]
             }
         },
@@ -130,7 +163,8 @@
                 "MapPublicIpOnLaunch": "True",
                 "VpcId": { "Ref": "Vpc" },
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "servicesubnet", { "Ref": "vpcEnv" }, "a" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "servicesubnet", { "Ref": "vpcEnv" }, "a" ] ] } },
+                    { "Key": "Business", "Value": { "Ref": "business" } }
                 ]
             }
         },
@@ -143,7 +177,8 @@
                 "VpcId": { "Ref": "Vpc" },
                 "MapPublicIpOnLaunch": "True",
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "servicesubnet", { "Ref": "vpcEnv" }, "b" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "servicesubnet", { "Ref": "vpcEnv" }, "b" ] ] } },
+                    { "Key": "Business", "Value": { "Ref": "business" } }
                 ]
             }
         },
@@ -152,7 +187,8 @@
             "Type": "AWS::EC2::InternetGateway",
             "Properties": {
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "internetgateway", { "Ref": "vpcEnv" } ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "internetgateway", { "Ref": "vpcEnv" } ] ] } },
+                    { "Key": "Business", "Value": { "Ref": "business" } }
                 ]
             }
         },
@@ -171,7 +207,8 @@
             "Properties": {
                 "VpcId": { "Ref": "Vpc" },
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "routetable", { "Ref": "vpcEnv" }, "public" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "routetable", { "Ref": "vpcEnv" }, "public" ] ] } },
+                    { "Key": "Business", "Value": { "Ref": "business" } }
                 ]
             }
         },
@@ -215,6 +252,7 @@
                 ],
                 "Tags": [
                     { "Key": "Name", "Value": { "Fn::Join": ["-", [ "natsg", { "Ref": "vpcEnv" } ] ] } },
+                    { "Key": "Business", "Value": { "Ref": "business" } }
                 ]
             }
         },
@@ -230,7 +268,8 @@
                 "SubnetId": { "Ref": "ServiceSubnetA" },
                 "Tags": [
                     { "Key": "Name", "Value": { "Fn::Join": ["-", [ "nat", { "Ref": "vpcEnv" } ] ] } },
-                    { "Key": "vpc_env", "Value": { "Ref": "vpcEnv" } }
+                    { "Key": "vpc_env", "Value": { "Ref": "vpcEnv" } },
+                    { "Key": "Business", "Value": { "Ref": "business" } }
                 ],
                 "UserData": { "Fn::Base64": { "Fn::Join": ["", [
                     "#!/bin/bash\n",
@@ -259,7 +298,8 @@
             "Properties": {
                 "VpcId": { "Ref": "Vpc" },
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "routetable", { "Ref": "vpcEnv" }, "private" ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "routetable", { "Ref": "vpcEnv" }, "private" ] ] } },
+                    { "Key": "Business", "Value": { "Ref": "business" } }
                 ]
             }
         },
@@ -304,7 +344,22 @@
                 "SubnetId": { "Ref": "DataSubnetB" },
                 "RouteTableId": { "Ref": "PrivateRouteTable" }
             }
+        },
+
+        "MgmtPeeringConnection": {
+            "Condition": "CreateMgmtPeering",
+            "Type": "AWS::EC2::VPCPeeringConnection",
+            "Properties": {
+                "PeerVpcId": { "Ref": "mgmtVpcId" },
+                "VpcId": { "Ref": "Vpc" },
+                "Tags": [
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "peering", { "Ref": "vpcEnv" }, "mgmt" ] ] } },
+                    { "Key": "Business", "Value": { "Ref": "business" } }
+                ]
+            }
         }
+
+
     },
 
     "Outputs": {
@@ -313,23 +368,39 @@
             "Value": { "Ref": "Vpc" }
         },
 
+        "mgmtHostedZoneId": {
+            "Condition": "MgmtVpc",
+            "Description": "Logical ID of MgmtHostedZone",
+            "Value": { "Ref": "MgmtHostedZone" }
+        },
+
+        "mgmtHostedZoneName": {
+            "Condition": "MgmtVpc",
+            "Description": "Management hosted zone name",
+            "Value": { "Fn::Join": [".", [ "mgmt", { "Ref": "hostedZoneName" } ] ] }
+        },
+
         "devHostedZoneId": {
+            "Condition": "DevQaVpc",
             "Description": "Logical ID of DevHostedZone",
             "Value": { "Ref": "DevHostedZone" }
         },
 
         "devHostedZoneName": {
+            "Condition": "DevQaVpc",
             "Description": "Dev hosted zone name",
             "Value": { "Fn::Join": [".", [ "dev", { "Ref": "hostedZoneName" } ] ] }
         },
 
         "qaHostedZoneId": {
+            "Condition": "DevQaVpc",
             "Description": "Logical ID of QaHostedZone",
             "Value": { "Ref": "QaHostedZone" }
         },
 
         "qaHostedZoneName": {
-            "Description": "Qa hosted zone name",
+            "Condition": "DevQaVpc",
+            "Description": "QA hosted zone name",
             "Value": { "Fn::Join": [".", [ "qa", { "Ref": "hostedZoneName" } ] ] }
         },
 
@@ -386,6 +457,12 @@
         "natSecurityGroupId": {
             "Description": "Logical ID of NatSecurityGroup",
             "Value": { "Ref": "NatSecurityGroup" }
+        },
+
+        "mgmtPeeringConnectionId": {
+            "Condition": "CreateMgmtPeering",
+            "Description": "Logical ID of MgmtPeeringConnection",
+            "Value": { "Ref": "MgmtPeeringConnection" }
         }
     }
 }

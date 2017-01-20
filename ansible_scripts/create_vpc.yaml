@@ -7,6 +7,14 @@
     - name: Get hosted zone info
       cloudformation_stack_facts: stack_name=hostedzone region={{ region }}
       register: hostedzone
+    - name: Get management vpc info
+      cloudformation_stack_facts: stack_name=vpc-mgmt region={{ region }}
+      register: mgmtvpc
+      when: vpc_env == "devqa" or vpc_env == "uatprod"
+    - name: Set mgmt_vpc_id fact
+      set_fact:
+        mgmt_vpc_id: "{{ mgmtvpc.stack_outputs.vpcId }}"
+      when: vpc_env == "devqa" or vpc_env == "uatprod"
     - name: Create VPC stack
       cloudformation:
         region: "{{ region }}"
@@ -22,3 +30,5 @@
           serviceSubnets: "{{ service_subnets }}"
           sshKey: "{{ ssh_key }}"
           hostedZoneName: "{{ hostedzone.stack_outputs.hostedZoneName }}"
+          business: "{{ business }}"
+          mgmtVpcId: "{{ mgmt_vpc_id | default('') }}"
