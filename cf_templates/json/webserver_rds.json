@@ -8,8 +8,8 @@
             "Type": "String"
         },
 
-        "businessName": {
-            "Description": "Name of business the resource belongs to",
+        "business": {
+            "Description": "Business owner of resource",
             "Type": "String"
         },
 
@@ -57,7 +57,6 @@
             "Description": "Internal DNS name of Puppetmaster",
             "Type": "String"
         }
-
 
     },
 
@@ -109,7 +108,8 @@
                     { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "122.55.14.126/32" }
                 ],
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "serviceName" }, { "Ref": "vpcEnv" } ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "serviceName" }, "sg", { "Ref": "puppetEnv" } ] ] } },
+                    { "Key": "Business", "Value": { "Ref": "business" } }
                 ]
             }
         },
@@ -128,7 +128,7 @@
                 ],
                 "Tags": [
                     { "Key": "Name", "Value": { "Fn::Join": ["-", [ { "Ref": "serviceName" }, { "Ref": "puppetEnv" } ] ] } },
-                    { "Key": "Business", "Value": { "Ref": "businessName" } },
+                    { "Key": "Business", "Value": { "Ref": "business" } },
                     { "Key": "vpc_env", "Value": { "Ref": "vpcEnv" } },
                     { "Key": "puppet_role", "Value": { "Ref": "puppetRole" } },
                     { "Key": "puppet_env", "Value": { "Ref": "puppetEnv" } }
@@ -137,7 +137,7 @@
                     "#!/bin/bash\n",
                     "rpm -Uvh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm\n",
                     "yum -y install puppet\n",
-                    "/opt/puppetlabs/bin/puppet config set --section agent environment ", { "Ref": "puppetEnv" }, "\n",
+                    "/opt/puppetlabs/bin/puppet config set --section agent environment ", { "Ref": "vpcEnv" }, "\n",
                     "/opt/puppetlabs/bin/puppet config set --section agent server ", { "Ref": "puppetmasterPrivateDnsName" }, "\n",
                     "/opt/puppetlabs/bin/puppet agent -t"
                 ] ] } }

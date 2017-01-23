@@ -18,23 +18,13 @@
             "Type": "String"
         },
 
-        "devHostedZoneId": {
-            "Description": "Hosted zone ID for dev environment",
+        "mgmtHostedZoneId": {
+            "Description": "Hosted zone ID for mgmt environment",
             "Type": "String"
         },
 
-        "devHostedZoneName": {
-            "Description": "Hosted zone name for dev environment",
-            "Type": "String"
-        },
-
-        "qaHostedZoneId": {
-            "Description": "Hosted zone ID for qa environment",
-            "Type": "String"
-        },
-
-        "qaHostedZoneName": {
-            "Description": "Hosted zone name for qa environment",
+        "mgmtHostedZoneName": {
+            "Description": "Hosted zone name for mgmt environment",
             "Type": "String"
         },
 
@@ -75,6 +65,11 @@
 
         "puppetRole": {
             "Description": "Puppet role",
+            "Type": "String"
+        },
+
+        "business": {
+            "Description": "Business owner of resource",
             "Type": "String"
         }
 
@@ -126,11 +121,14 @@
                 "VpcId": { "Ref": "vpcId" },
                 "SecurityGroupIngress": [
                     { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "122.55.14.126/32" },
-                    { "IpProtocol": "tcp", "FromPort": "8140", "ToPort": "8140", "CidrIp": { "Ref": "vpcCidr" } },
+                    { "IpProtocol": "tcp", "FromPort": "8140", "ToPort": "8140", "CidrIp": "172.17.0.0/16" },
+                    { "IpProtocol": "tcp", "FromPort": "8140", "ToPort": "8140", "CidrIp": "172.18.0.0/16" },
+                    { "IpProtocol": "tcp", "FromPort": "8140", "ToPort": "8140", "CidrIp": "172.19.0.0/16" },
                     { "IpProtocol": "tcp", "FromPort": "8088", "ToPort": "8088", "CidrIp": "0.0.0.0/0" }
                 ],
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "puppetmastersg", { "Ref": "vpcEnv" } ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "puppetmastersg", { "Ref": "vpcEnv" } ] ] } },
+                    { "Key": "Business", "Value": { "Ref": "business" } }
                 ]
             }
         },
@@ -150,7 +148,8 @@
                 "Tags": [
                     { "Key": "Name", "Value": { "Fn::Join": ["-", [ "puppetmaster", { "Ref": "vpcEnv" } ] ] } },
                     { "Key": "vpc_env", "Value": { "Ref": "vpcEnv" } },
-                    { "Key": "puppet_role", "Value": { "Ref": "puppetRole" } }
+                    { "Key": "puppet_role", "Value": { "Ref": "puppetRole" } },
+                    { "Key": "Business", "Value": { "Ref": "business" } }
                 ],
                 "UserData": { "Fn::Base64": { "Fn::Join": ["", [
                     "#!/bin/bash\n",
@@ -193,22 +192,11 @@
             }
         },
 
-        "PuppetmasterDevRecordSet": {
+        "PuppetmasterPrivateRecordSet": {
             "Type" : "AWS::Route53::RecordSet",
             "Properties": {
-                "HostedZoneId": { "Ref": "devHostedZoneId" },
-                "Name": { "Fn::Join": [".", [ "puppetmaster", { "Ref": "devHostedZoneName" } ] ] },
-                "ResourceRecords": [ { "Fn::GetAtt" : [ "PuppetmasterInstance", "PrivateIp" ] } ],
-                "TTL": "300",
-                "Type": "A"
-            }
-        },
-
-        "PuppetmasterQaRecordSet": {
-            "Type" : "AWS::Route53::RecordSet",
-            "Properties": {
-                "HostedZoneId": { "Ref": "qaHostedZoneId" },
-                "Name": { "Fn::Join": [".", [ "puppetmaster", { "Ref": "qaHostedZoneName" } ] ] },
+                "HostedZoneId": { "Ref": "mgmtHostedZoneId" },
+                "Name": { "Fn::Join": [".", [ "puppetmaster", { "Ref": "mgmtHostedZoneName" } ] ] },
                 "ResourceRecords": [ { "Fn::GetAtt" : [ "PuppetmasterInstance", "PrivateIp" ] } ],
                 "TTL": "300",
                 "Type": "A"
@@ -231,6 +219,11 @@
         "puppetmasterPublicDnsName": {
             "Description": "DNS Name of PuppetmasterPublicRecordSet",
             "Value": { "Ref": "PuppetmasterPublicRecordSet" }
+        },
+
+        "puppetmasterPrivateDnsName": {
+            "Description": "DNS Name of PuppetmasterPrivateRecordSet",
+            "Value": { "Ref": "PuppetmasterPrivateRecordSet" }
         },
 
         "puppetmasterIamRoleArn": {

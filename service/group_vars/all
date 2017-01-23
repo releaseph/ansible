@@ -1,4 +1,4 @@
-env: mgmt
+env: service
 ssh_key: releaseph
 region: ap-southeast-1
 availability_zones: ap-southeast-1a,ap-southeast-1b
