@@ -51,12 +51,26 @@
         "mgmtVpcId": {
             "Description": "Logical ID of Management VPC",
             "Type": "String"
+        },
+
+        "mgmtVpcCidr": {
+            "Description": "CIDR address of Management VPC",
+            "Type": "String"
+        },
+
+        "mgmtVpcPrivateRouteTable": {
+            "Description": "Private route table of Management VPC",
+            "Type": "String"
+        },
+
+        "mgmtVpcPublicRouteTable": {
+            "Description": "Public route table of Management VPC",
+            "Type": "String"
         }
 
     },
 
     "Conditions": {
-        "MgmtVpc": { "Fn::Equals": [ { "Ref": "vpcEnv" }, "mgmt" ] },
         "DevQaVpc": { "Fn::Equals": [ { "Ref": "vpcEnv" }, "devqa" ] },
         "UatProdVpc": { "Fn::Equals": [ { "Ref": "vpcEnv" }, "uatprod" ] },
         "CreateMgmtPeering": { "Fn::Or": [ { "Condition": "DevQaVpc" }, { "Condition": "UatProdVpc" } ] }
@@ -73,15 +87,6 @@
                     { "Key": "Name", "Value": { "Fn::Join": ["-", [ "vpc", { "Ref": "vpcEnv" } ] ] } },
                     { "Key": "Business", "Value": { "Ref": "business" } }
                 ]
-            }
-        },
-
-        "MgmtHostedZone": {
-            "Condition": "MgmtVpc",
-            "Type" : "AWS::Route53::HostedZone",
-            "Properties" : {
-                "Name": { "Fn::Join": [".", [ "mgmt", { "Ref": "hostedZoneName" } ] ] },
-                "VPCs": [ { "VPCId": { "Ref": "Vpc" }, "VPCRegion": { "Ref": "region" } } ]
             }
         },
 
@@ -357,8 +362,51 @@
                     { "Key": "Business", "Value": { "Ref": "business" } }
                 ]
             }
-        }
+        },
 
+        "ToMgmtVpcPrivateRoute": {
+            "Condition": "CreateMgmtPeering",
+            "DependsOn": "MgmtPeeringConnection",
+            "Type": "AWS::EC2::Route",
+            "Properties": {
+                "RouteTableId": { "Ref": "PrivateRouteTable" },
+                "DestinationCidrBlock": { "Ref": "mgmtVpcCidr" },
+                "VpcPeeringConnectionId": { "Ref": "MgmtPeeringConnection" }
+            }
+        },
+
+        "FromMgmtVpcPrivateRoute": {
+            "Condition": "CreateMgmtPeering",
+            "DependsOn": "MgmtPeeringConnection",
+            "Type": "AWS::EC2::Route",
+            "Properties": {
+                "RouteTableId": { "Ref": "mgmtVpcPrivateRouteTable" },
+                "DestinationCidrBlock": { "Ref": "vpcCidr" },
+                "VpcPeeringConnectionId": { "Ref": "MgmtPeeringConnection" }
+            }
+        },
+
+        "ToMgmtVpcPublicRoute": {
+            "Condition": "CreateMgmtPeering",
+            "DependsOn": "MgmtPeeringConnection",
+            "Type": "AWS::EC2::Route",
+            "Properties": {
+                "RouteTableId": { "Ref": "PublicRouteTable" },
+                "DestinationCidrBlock": { "Ref": "mgmtVpcCidr" },
+                "VpcPeeringConnectionId": { "Ref": "MgmtPeeringConnection" }
+            }
+        },
+
+        "FromMgmtVpcPublicRoute": {
+            "Condition": "CreateMgmtPeering",
+            "DependsOn": "MgmtPeeringConnection",
+            "Type": "AWS::EC2::Route",
+            "Properties": {
+                "RouteTableId": { "Ref": "mgmtVpcPublicRouteTable" },
+                "DestinationCidrBlock": { "Ref": "vpcCidr" },
+                "VpcPeeringConnectionId": { "Ref": "MgmtPeeringConnection" }
+            }
+        }
 
     },
 
@@ -368,16 +416,9 @@
             "Value": { "Ref": "Vpc" }
         },
 
-        "mgmtHostedZoneId": {
-            "Condition": "MgmtVpc",
-            "Description": "Logical ID of MgmtHostedZone",
-            "Value": { "Ref": "MgmtHostedZone" }
-        },
-
-        "mgmtHostedZoneName": {
-            "Condition": "MgmtVpc",
-            "Description": "Management hosted zone name",
-            "Value": { "Fn::Join": [".", [ "mgmt", { "Ref": "hostedZoneName" } ] ] }
+        "vpcCidr": {
+            "Description": "CIDR address of VPC",
+            "Value": { "Ref": "vpcCidr" }
         },
 
         "devHostedZoneId": {

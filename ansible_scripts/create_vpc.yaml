@@ -14,6 +14,9 @@
     - name: Set mgmt_vpc_id fact
       set_fact:
         mgmt_vpc_id: "{{ mgmtvpc.stack_outputs.vpcId }}"
+        mgmt_vpc_cidr: "{{ mgmtvpc.stack_outputs.vpcCidr }}"
+        mgmt_vpc_private_route_table: "{{ mgmtvpc.stack_outputs.privateRouteTableId }}"
+        mgmt_vpc_public_route_table: "{{ mgmtvpc.stack_outputs.publicRouteTableId }}"
       when: vpc_env == "devqa" or vpc_env == "uatprod"
     - name: Create VPC stack
       cloudformation:
@@ -32,3 +35,6 @@
           hostedZoneName: "{{ hostedzone.stack_outputs.hostedZoneName }}"
           business: "{{ business }}"
           mgmtVpcId: "{{ mgmt_vpc_id | default('') }}"
+          mgmtVpcCidr: "{{ mgmt_vpc_cidr | default ('') }}"
+          mgmtVpcPrivateRouteTable: "{{ mgmt_vpc_private_route_table | default ('') }}"
+          mgmtVpcPublicRouteTable: "{{ mgmt_vpc_public_route_table | default ('') }}"

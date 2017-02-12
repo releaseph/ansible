@@ -18,16 +18,6 @@
             "Type": "String"
         },
 
-        "mgmtHostedZoneId": {
-            "Description": "Hosted zone ID for mgmt environment",
-            "Type": "String"
-        },
-
-        "mgmtHostedZoneName": {
-            "Description": "Hosted zone name for mgmt environment",
-            "Type": "String"
-        },
-
         "vpcCidr": {
             "Description": "VPC CIDR block",
             "Type": "String"
@@ -172,6 +162,7 @@
                     "/opt/puppetlabs/puppet/bin/r10k deploy environment\n",
                     "/opt/puppetlabs/bin/puppet config set --section master hiera_config '/etc/puppetlabs/code/environments/", { "Ref": "puppetEnv" }, "/hiera.yaml'\n",
                     "/opt/puppetlabs/bin/puppet config set --section master autosign true\n",
+                    "/opt/puppetlabs/bin/puppet config set --section master dns_alt_names puppet,int.puppetmaster.", { "Ref": "hostedZoneName" }, "\n",
                     "/opt/puppetlabs/bin/puppet config set --section agent environment ", { "Ref": "puppetEnv" }, "\n",
                     "echo \"127.0.0.1 puppet\" >> /etc/hosts\n",
                     "sed -i -e 's/\\(-Xm[sx]\\)\\([0-9a-z]*\\)/\\1512m/g' /etc/sysconfig/puppetserver\n",
@@ -195,8 +186,8 @@
         "PuppetmasterPrivateRecordSet": {
             "Type" : "AWS::Route53::RecordSet",
             "Properties": {
-                "HostedZoneId": { "Ref": "mgmtHostedZoneId" },
-                "Name": { "Fn::Join": [".", [ "puppetmaster", { "Ref": "mgmtHostedZoneName" } ] ] },
+                "HostedZoneId": { "Ref": "hostedZoneId" },
+                "Name": { "Fn::Join": [".", [ "int", "puppetmaster", { "Ref": "hostedZoneName" } ] ] },
                 "ResourceRecords": [ { "Fn::GetAtt" : [ "PuppetmasterInstance", "PrivateIp" ] } ],
                 "TTL": "300",
                 "Type": "A"

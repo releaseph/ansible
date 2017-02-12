@@ -30,6 +30,4 @@
           puppetRole: "{{ puppet_role }}"
           hostedZoneId: "{{ hostedzone.stack_outputs.hostedZoneId }}"
           hostedZoneName: "{{ hostedzone.stack_outputs.hostedZoneName }}"
-          mgmtHostedZoneId: "{{ vpc.stack_outputs.mgmtHostedZoneId }}"
-          mgmtHostedZoneName: "{{ vpc.stack_outputs.mgmtHostedZoneName }}"
           business: "{{ business }}"
