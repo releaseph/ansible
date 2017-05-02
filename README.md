@@ -5,6 +5,7 @@ This repository contains playbooks and all necessary scripts for creating and ma
 To use the playbooks in this repository, Ansible must be installed on your local machine.
 
 Note: As of writing, the version of Ansible being used is 2.2.0.0.
+
 To install using apt-get:
 ```
 sudo apt-get install ansible
