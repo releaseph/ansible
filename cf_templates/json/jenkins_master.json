@@ -1,0 +1,152 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "ansible/cf_templates/json/jenkins_master.json",
+
+    "Parameters": {
+        "vpcId": {
+            "Description": "VPC ID",
+            "Type": "String"
+        },
+
+        "vpcEnv": {
+            "Description": "VPC environment string",
+            "Type": "String"
+        },
+
+        "ami": {
+            "Description": "Instance AMI",
+            "Type": "String"
+        },
+
+        "instanceType": {
+            "Description": "Instance type",
+            "Type": "String"
+        },
+
+        "sshKey": {
+            "Description": "EC2 instance SSH key",
+            "Type": "String"
+        },
+
+        "serviceSubnetAId": {
+            "Description": "Logical ID of ServiceSubnetA",
+            "Type": "String"
+        },
+
+        "puppetEnv": {
+            "Description": "Puppet environment",
+            "Type": "String"
+        },
+
+        "puppetRole": {
+            "Description": "Puppet role",
+            "Type": "String"
+        },
+
+        "puppetmasterPrivateDnsName": {
+            "Description": "Internal DNS name of Puppetmaster",
+            "Type": "String"
+        }
+
+
+    },
+
+    "Resources": {
+        "JenkinsIamRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version" : "2012-10-17",
+                    "Statement": [ {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": [ "ec2.amazonaws.com" ]
+                        },
+                        "Action": [ "sts:AssumeRole" ]
+                    } ]
+                },
+                "Policies": [ {
+                    "PolicyName": "jenkinsPolicy",
+                    "PolicyDocument": {
+                        "Version" : "2012-10-17",
+                        "Statement": [ {
+                            "Effect": "Allow",
+                            "Action": [
+                                "ec2:Describe*"
+                            ],
+                            "Resource": "*"
+                        } ]
+                    }
+                } ]
+            }
+        },
+
+        "JenkinsInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Path": "/",
+                "Roles": [ { "Ref": "JenkinsIamRole" } ]
+            }
+        },
+
+        "JenkinsSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Jenkins security group",
+                "VpcId": { "Ref": "vpcId" },
+                "SecurityGroupIngress": [
+                    { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "122.55.14.126/32" },
+                    { "IpProtocol": "tcp", "FromPort": "8080", "ToPort": "8080", "CidrIp": "122.55.14.126/32" }
+                ],
+                "Tags": [
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "jenkinssg", { "Ref": "vpcEnv" } ] ] } }
+                ]
+            }
+        },
+
+        "JenkinsInstance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "IamInstanceProfile": { "Ref": "JenkinsInstanceProfile" },
+                "ImageId": { "Ref": "ami" },
+                "InstanceType": { "Ref": "instanceType" },
+                "KeyName": { "Ref": "sshKey" },
+                "SecurityGroupIds": [ { "Ref": "JenkinsSecurityGroup" } ],
+                "SubnetId": { "Ref": "serviceSubnetAId" },
+                "BlockDeviceMappings": [
+                    { "DeviceName": "/dev/sda1", "Ebs": { "DeleteOnTermination": "True" } }
+                ],
+                "Tags": [
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "jenkins", { "Ref": "vpcEnv" } ] ] } },
+                    { "Key": "vpc_env", "Value": { "Ref": "vpcEnv" } },
+                    { "Key": "puppet_role", "Value": { "Ref": "puppetRole" } }
+                ],
+                "UserData": { "Fn::Base64": { "Fn::Join": ["", [
+                    "#!/bin/bash\n",
+                    "rpm -Uvh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm\n",
+                    "yum -y install puppet\n",
+                    "/opt/puppetlabs/bin/puppet config set --section agent environment ", { "Ref": "puppetEnv" }, "\n",
+                    "/opt/puppetlabs/bin/puppet config set --section agent server ", { "Ref": "puppetmasterPrivateDnsName" }, "\n",
+                    "/opt/puppetlabs/bin/puppet agent -t"
+                ] ] } }
+            }
+        }
+    },
+
+    "Outputs": {
+        "jenkinsInstanceId": {
+            "Description": "Logical ID of JenkinsInstance",
+            "Value": { "Ref": "JenkinsInstance" }
+        },
+
+        "jenkinsSecurityGroupId": {
+            "Description": "Logical ID of JenkinsSecurityGroup",
+            "Value": { "Ref": "JenkinsSecurityGroup" }
+        },
+
+        "jenkinsIamRoleArn": {
+            "Description": "ARN of JenkinsIamRole",
+            "Value": { "Fn::GetAtt" : [ "JenkinsIamRole", "Arn" ] }
+        }
+    }
+}
