@@ -52,7 +52,7 @@
     },
 
     "Resources": {
-        "JenkinsIamRole": {
+        "JenkinsMasterIamRole": {
             "Type": "AWS::IAM::Role",
             "Properties": {
                 "AssumeRolePolicyDocument": {
@@ -66,7 +66,7 @@
                     } ]
                 },
                 "Policies": [ {
-                    "PolicyName": "jenkinsPolicy",
+                    "PolicyName": "jenkinsMasterPolicy",
                     "PolicyDocument": {
                         "Version" : "2012-10-17",
                         "Statement": [ {
@@ -81,15 +81,15 @@
             }
         },
 
-        "JenkinsInstanceProfile": {
+        "JenkinsMasterInstanceProfile": {
             "Type": "AWS::IAM::InstanceProfile",
             "Properties": {
                 "Path": "/",
-                "Roles": [ { "Ref": "JenkinsIamRole" } ]
+                "Roles": [ { "Ref": "JenkinsMasterIamRole" } ]
             }
         },
 
-        "JenkinsSecurityGroup": {
+        "JenkinsMasterSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
                 "GroupDescription": "Jenkins security group",
@@ -99,25 +99,25 @@
                     { "IpProtocol": "tcp", "FromPort": "8080", "ToPort": "8080", "CidrIp": "122.55.14.126/32" }
                 ],
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "jenkinssg", { "Ref": "vpcEnv" } ] ] } }
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "jenkins-master-sg", { "Ref": "vpcEnv" } ] ] } }
                 ]
             }
         },
 
-        "JenkinsInstance": {
+        "JenkinsMasterInstance": {
             "Type": "AWS::EC2::Instance",
             "Properties": {
-                "IamInstanceProfile": { "Ref": "JenkinsInstanceProfile" },
+                "IamInstanceProfile": { "Ref": "JenkinsMasterInstanceProfile" },
                 "ImageId": { "Ref": "ami" },
                 "InstanceType": { "Ref": "instanceType" },
                 "KeyName": { "Ref": "sshKey" },
-                "SecurityGroupIds": [ { "Ref": "JenkinsSecurityGroup" } ],
+                "SecurityGroupIds": [ { "Ref": "JenkinsMasterSecurityGroup" } ],
                 "SubnetId": { "Ref": "serviceSubnetAId" },
                 "BlockDeviceMappings": [
                     { "DeviceName": "/dev/sda1", "Ebs": { "DeleteOnTermination": "True" } }
                 ],
                 "Tags": [
-                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "jenkins", { "Ref": "vpcEnv" } ] ] } },
+                    { "Key": "Name", "Value": { "Fn::Join": ["-", [ "jenkins-master", { "Ref": "vpcEnv" } ] ] } },
                     { "Key": "vpc_env", "Value": { "Ref": "vpcEnv" } },
                     { "Key": "puppet_role", "Value": { "Ref": "puppetRole" } }
                 ],
@@ -134,19 +134,19 @@
     },
 
     "Outputs": {
-        "jenkinsInstanceId": {
-            "Description": "Logical ID of JenkinsInstance",
-            "Value": { "Ref": "JenkinsInstance" }
+        "jenkinsMasterInstanceId": {
+            "Description": "Logical ID of JenkinsMasterInstance",
+            "Value": { "Ref": "JenkinsMasterInstance" }
         },
 
-        "jenkinsSecurityGroupId": {
-            "Description": "Logical ID of JenkinsSecurityGroup",
-            "Value": { "Ref": "JenkinsSecurityGroup" }
+        "jenkinsMasterSecurityGroupId": {
+            "Description": "Logical ID of JenkinsMasterSecurityGroup",
+            "Value": { "Ref": "JenkinsMasterSecurityGroup" }
         },
 
-        "jenkinsIamRoleArn": {
-            "Description": "ARN of JenkinsIamRole",
-            "Value": { "Fn::GetAtt" : [ "JenkinsIamRole", "Arn" ] }
+        "jenkinsMasterIamRoleArn": {
+            "Description": "ARN of JenkinsMasterIamRole",
+            "Value": { "Fn::GetAtt" : [ "JenkinsMasterIamRole", "Arn" ] }
         }
     }
 }
