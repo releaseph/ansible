@@ -46,6 +46,11 @@
         "puppetmasterPrivateDnsName": {
             "Description": "Internal DNS name of Puppetmaster",
             "Type": "String"
+        },
+
+        "dataVolumeSize": {
+            "Description": "Size of Jenkins data volume",
+            "Type": "String"
         }
 
 
@@ -114,7 +119,16 @@
                 "SecurityGroupIds": [ { "Ref": "JenkinsMasterSecurityGroup" } ],
                 "SubnetId": { "Ref": "serviceSubnetAId" },
                 "BlockDeviceMappings": [
-                    { "DeviceName": "/dev/sda1", "Ebs": { "DeleteOnTermination": "True" } }
+                    { "DeviceName": "/dev/sda1", "Ebs": { "DeleteOnTermination": "True" } },
+                    {
+                        "DeviceName": "/dev/sdf",
+                        "Ebs":
+                        {
+                            "VolumeSize": { "Ref": "dataVolumeSize" },
+                            "VolumeType": "gp2",
+                            "DeleteOnTermination": "False"
+                        }
+                    }
                 ],
                 "Tags": [
                     { "Key": "Name", "Value": { "Fn::Join": ["-", [ "jenkins-master", { "Ref": "vpcEnv" } ] ] } },
@@ -123,6 +137,16 @@
                 ],
                 "UserData": { "Fn::Base64": { "Fn::Join": ["", [
                     "#!/bin/bash\n",
+                    "if ! grep -q xvdf /etc/fstab; then\n",
+                    "echo \"/dev/xvdf /var/lib/jenkins ext4 defaults 0 0\" >> /etc/fstab\n",
+                    "/usr/sbin/mkfs -t ext4 /dev/xvdf\n",
+                    "fi\n",
+                    "/usr/sbin/groupadd -r jenkins\n",
+                    "/usr/sbin/useradd -g jenkins -s /bin/false -r -c \"Jenkins Automation Server\" -d \"/var/lib/jenkins\" jenkins\n",
+                    "[ -d /var/lib/jenkins ] && rm -rf /var/lib/jenkins\n",
+                    "mkdir /var/lib/jenkins\n",
+                    "/bin/mount /var/lib/jenkins\n",
+                    "chown jenkins:jenkins /var/lib/jenkins\n",
                     "rpm -Uvh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm\n",
                     "yum -y install puppet\n",
                     "/opt/puppetlabs/bin/puppet config set --section agent environment ", { "Ref": "puppetEnv" }, "\n",

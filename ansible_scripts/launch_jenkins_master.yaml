@@ -28,3 +28,4 @@
           puppetEnv: "{{ env }}"
           puppetRole: "{{ puppet_role }}"
           puppetmasterPrivateDnsName: "{{ puppetmaster.stack_outputs.puppetmasterPrivateDnsName }}"
+          dataVolumeSize: "{{ data_volume_size }}"
