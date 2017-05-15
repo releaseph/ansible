@@ -51,8 +51,17 @@
         "dataVolumeSize": {
             "Description": "Size of Jenkins data volume",
             "Type": "String"
-        }
+        },
 
+        "hostedZoneId": {
+            "Description": "Hosted zone ID",
+            "Type": "String"
+        },
+
+        "hostedZoneName": {
+            "Description": "Hosted zone name",
+            "Type": "String"
+        }
 
     },
 
@@ -154,7 +163,18 @@
                     "/opt/puppetlabs/bin/puppet agent -t"
                 ] ] } }
             }
-        }
+        },
+
+        "JenkinsMasterPublicRecordSet": {
+            "Type" : "AWS::Route53::RecordSet",
+            "Properties": {
+                "HostedZoneId": { "Ref": "hostedZoneId" },
+                "Name": { "Fn::Join": [".", [ "jenkins", { "Ref": "hostedZoneName" } ] ] },
+                "ResourceRecords": [ { "Fn::GetAtt" : [ "JenkinsMasterInstance", "PublicIp" ] } ],
+                "TTL": "300",
+                "Type": "A"
+            }
+        },
     },
 
     "Outputs": {
@@ -171,6 +191,11 @@
         "jenkinsMasterIamRoleArn": {
             "Description": "ARN of JenkinsMasterIamRole",
             "Value": { "Fn::GetAtt" : [ "JenkinsMasterIamRole", "Arn" ] }
-        }
+        },
+
+        "jenkinsMasterPublicDnsName": {
+            "Description": "DNS Name of JenkinsMasterPublicRecordSet",
+            "Value": { "Ref": "JenkinsMasterPublicRecordSet" }
+        },
     }
 }
