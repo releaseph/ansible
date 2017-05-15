@@ -51,8 +51,17 @@
         "serviceSubnetCIDRs": {
             "Description": "CIDR IPs of service subnet",
             "Type": "CommaDelimitedList"
-        }
+        },
 
+        "hostedZoneId": {
+            "Description": "Hosted zone ID",
+            "Type": "String"
+        },
+
+        "hostedZoneName": {
+            "Description": "Hosted zone name",
+            "Type": "String"
+        }
 
     },
 
@@ -101,10 +110,10 @@
                 "VpcId": { "Ref": "vpcId" },
                 "SecurityGroupIngress": [
                     { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "122.55.14.126/32" },
-                    { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": { "Fn::Select" : [ "0", {"Ref" : "serviceSubnetCIDRs"} ] } },
-                    { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": { "Fn::Select" : [ "1", {"Ref" : "serviceSubnetCIDRs"} ] } },
                     { "IpProtocol": "tcp", "FromPort": "4243", "ToPort": "4243", "CidrIp": { "Fn::Select" : [ "0", {"Ref" : "serviceSubnetCIDRs"} ] } },
-                    { "IpProtocol": "tcp", "FromPort": "4243", "ToPort": "4243", "CidrIp": { "Fn::Select" : [ "1", {"Ref" : "serviceSubnetCIDRs"} ] } }
+                    { "IpProtocol": "tcp", "FromPort": "4243", "ToPort": "4243", "CidrIp": { "Fn::Select" : [ "1", {"Ref" : "serviceSubnetCIDRs"} ] } },
+                    { "IpProtocol": "tcp", "FromPort": "32768", "ToPort": "61000", "CidrIp": { "Fn::Select" : [ "0", {"Ref" : "serviceSubnetCIDRs"} ] } },
+                    { "IpProtocol": "tcp", "FromPort": "32768", "ToPort": "61000", "CidrIp": { "Fn::Select" : [ "1", {"Ref" : "serviceSubnetCIDRs"} ] } }
                 ],
                 "Tags": [
                     { "Key": "Name", "Value": { "Fn::Join": ["-", [ "jenkins-slave-sg", { "Ref": "vpcEnv" } ] ] } }
@@ -138,6 +147,17 @@
                     "/opt/puppetlabs/bin/puppet agent -t"
                 ] ] } }
             }
+        },
+
+        "JenkinsSlavePrivateRecordSet": {
+            "Type" : "AWS::Route53::RecordSet",
+            "Properties": {
+                "HostedZoneId": { "Ref": "hostedZoneId" },
+                "Name": { "Fn::Join": [".", [ "int", "jenkins-slave", { "Ref": "hostedZoneName" } ] ] },
+                "ResourceRecords": [ { "Fn::GetAtt" : [ "JenkinsSlaveInstance", "PrivateIp" ] } ],
+                "TTL": "300",
+                "Type": "A"
+            }
         }
     },
 
@@ -155,6 +175,11 @@
         "jenkinsSlaveIamRoleArn": {
             "Description": "ARN of JenkinsSlaveIamRole",
             "Value": { "Fn::GetAtt" : [ "JenkinsSlaveIamRole", "Arn" ] }
+        },
+
+        "jenkinsSlavePrivateDnsName": {
+            "Description": "DNS Name of JenkinsSlavePrivateRecordSet",
+            "Value": { "Ref": "JenkinsSlavePrivateRecordSet" }
         }
     }
 }
